@@ -35,8 +35,8 @@ if prompt := st.chat_input("What is up?"):
             model=st.session_state["ollama_model"],
             messages=[
                 {"role": "system", "content": instructions},
-                {"role": "user", "content": prompt},
-            ],
+                *st.session_state.messages,
+            ]
         )
 
         response = chat_message.message.content

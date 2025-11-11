@@ -1,0 +1,4 @@
+.venv
+naiveDB
+uv.lock
+.env

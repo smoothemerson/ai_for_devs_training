@@ -1,0 +1,23 @@
+[project]
+name = "rag-challenge"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.13.8"
+dependencies = [
+    "bs4>=0.0.2",
+    "email-validator>=2.3.0",
+    "fastapi>=0.121.1",
+    "ipykernel>=7.1.0",
+    "langchain>=1.0.5",
+    "langchain-chroma>=1.0.0",
+    "langchain-cohere>=0.5.0",
+    "langchain-community>=0.4.1",
+    "langchain-ollama>=1.0.0",
+    "langchain-text-splitters>=1.0.0",
+    "pydantic>=2.12.4",
+    "pypdf>=6.2.0",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+    "ruff>=0.14.4",
+    "uvicorn>=0.38.0",
+]

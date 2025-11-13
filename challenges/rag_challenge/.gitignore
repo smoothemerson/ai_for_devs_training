@@ -1,0 +1,6 @@
+.venv
+naiveVectorDB
+parentVectorDB
+uv.lock
+.env
+__pycache__

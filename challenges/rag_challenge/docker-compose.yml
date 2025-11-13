@@ -1,0 +1,54 @@
+networks:
+  default:
+    name: rag
+    external: true
+
+x-ollama: &service-ollama
+  image: ollama/ollama:latest
+  container_name: ollama
+  restart: unless-stopped
+  ports:
+    - 11434:11434
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:latest
+  container_name: ollama-pull-llama
+  entrypoint: /bin/sh
+  environment:
+    - OLLAMA_HOST=ollama:11434
+  command:
+    - "-c"
+    - "sleep 3; ollama pull llama3.2:3b; ollama pull nomic-embed-text:v1.5"
+
+services:
+  ollama:
+    <<: *service-ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama-pull-llama:
+    <<: *init-ollama
+    depends_on:
+      - ollama
+
+  app:
+    build:
+      dockerfile: Dockerfile
+    container_name: app
+    depends_on:
+      ollama-pull-llama:
+        condition: service_completed_successfully
+    environment:
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - OLLAMA_HOST=ollama:11434
+    volumes:
+      - ./src:/app/src
+      - ./document:/app/document
+    ports:
+      - "8000:8000"
+    command: ["python", "-m", "src.main"]

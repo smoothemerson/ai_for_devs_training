@@ -1,0 +1,9 @@
+[project]
+name = "optimizing-llms-with-fine-tuning"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.13.8"
+dependencies = [
+    "datasets>=4.4.1",
+    "ipykernel>=7.1.0",
+]

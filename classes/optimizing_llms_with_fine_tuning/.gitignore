@@ -1,2 +1,4 @@
 .python-version
 uv.lock
+train.jsonl
+validation.jsonl

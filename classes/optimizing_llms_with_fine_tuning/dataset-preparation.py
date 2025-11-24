@@ -81,3 +81,22 @@ dataset_to_jsonl(datasets["train"], "train.jsonl")
 
 # %%
 dataset_to_jsonl(datasets["test"], "validation.jsonl")
+
+
+# %%
+# Construção do objeto para AWS
+def dataset_to_jsonl_aws(dataset, file_name):
+    with open(file_name, "w", encoding="utf-8") as f:
+        for example in dataset:
+            json_obj = {"prompt": example["text"], "completion": example["label_text"]}
+
+            f.write(json.dumps(json_obj, ensure_ascii=False) + "\n")
+
+
+# %%
+dataset_to_jsonl_aws(datasets["train"], "train.jsonl")
+
+# %%
+dataset_to_jsonl_aws(datasets["test"], "validation.jsonl")
+
+# %%

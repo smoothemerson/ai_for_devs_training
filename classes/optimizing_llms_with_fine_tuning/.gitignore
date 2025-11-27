@@ -2,3 +2,4 @@
 uv.lock
 train.jsonl
 validation.jsonl
+bert-hate-speech-test

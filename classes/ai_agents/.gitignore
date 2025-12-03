@@ -1,0 +1,4 @@
+.python-version
+uv.lock
+.venv
+ai_agents.egg-info

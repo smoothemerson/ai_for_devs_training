@@ -1,9 +1,10 @@
 # %%
 from crewai import Agent, Crew, Task
 from crewai.llm import LLM
+from IPython.display import Markdown
 
 # %%
-llm = LLM(model="ollama/llama3.2:1b", base_url="http://localhost:11434")
+llm = LLM(model="ollama/llama3.2:3b", base_url="http://localhost:11434")
 
 # %%
 planner = Agent(
@@ -45,3 +46,41 @@ editor = Agent(
     verbose=True,
 )
 # %%
+plan = Task(
+    description="""
+      1. Prioritize the lasts trends, key players, and noteworthy news on {topic}.
+      2. Identify the target audience, considering their interests and pain points.
+      3. Develop a detaild content outline including an introduction, key points and call to action.
+      4. Include SEO keyword and relevant data or sources.
+    """,
+    expected_output="A comprehensive content plan document with an outline, audience analysis, SEO keywords and resources.",
+    agent=planner,
+)
+
+write = Task(
+    description="""
+      1. Use the content plan to craft a compelling blog post on topic: {topic}.
+      2. Incorporate the SEO keywords naturally.
+      3. Sections/Subtitles are properly named in engaging manner.
+      4. Ensure the post is structured with an engaging introduction, insightful body and summarization conclusion.
+    """,
+    expected_output="A well-written blog post in Markdown format ready for publication, each section should have 2 or 3 paragraphs.",
+    agent=writer,
+)
+
+edit = Task(
+    description="""
+      Proofread the given blog post for grammatical errors and aligment with the brand's voice.
+    """,
+    expected_output="A well-written blog post in Markdown format, ready for publication, each section should have 2 or 3 paragraphs.",
+    agent=editor,
+)
+
+# %%
+crew = Crew(agents=[planner, writer, editor], tasks=[plan, write, edit], verbose=True)
+
+# %%
+result = crew.kickoff(inputs={"topic": "Artificial Intelligence"})
+
+# %%
+Markdown(result.raw)

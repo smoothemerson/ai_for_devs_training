@@ -11,7 +11,7 @@ dependencies = [
     "ipykernel>=7.1.0",
     "langchain>=1.1.2",
     "langchain-community>=0.4.1",
-    "langchain-openai>=1.1.0",
+    "langchain-ollama>=1.0.0",
     "litellm>=1.80.7",
     "yfinance>=0.2.66",
 ]

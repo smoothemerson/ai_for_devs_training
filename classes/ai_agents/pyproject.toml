@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "crewai>=1.6.1",
     "crewai-tools>=1.6.1",
+    "ddgs>=9.9.3",
     "duckduckgo-search>=8.1.1",
     "greenlet<3.3.0",
     "ipykernel>=7.1.0",

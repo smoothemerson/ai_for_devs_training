@@ -6,6 +6,7 @@ import yfinance as yf
 from crewai import Agent, Crew, Process, Task
 from crewai.tools import tool
 from crewai_tools import CSVSearchTool
+from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_ollama import ChatOllama
 
 os.environ["OPENAI_API_KEY"] = "NA"
@@ -97,6 +98,54 @@ getStockPrice = Task(
   """,
     tools=[fetch_stock_price],
     agent=stocketPriceAnalyst,
+)
+
+# %%
+newsAnalyst = Agent(
+    role="News Analyst",
+    goal="""
+    Create a short summary of the market news related to the stock {ticket} company.
+    Provide a market Fear & Greed Index score about the company.
+    For each requested stock asset, specify a number between 0 ans 100, where 0 is extreme fear and 100 is extreme greed.
+    """,
+    backstory="""
+    You're highly experienced in analyzing market trends and news for more than 10 years.
+    You're also a master level analyst in the human psychology.
+    You understand the news, their titles and information, but you look at those with a healthy dose of skepticism.
+    You consider the source of the news articles.
+    """,
+    verbose=True,
+    llm=llm,
+    max_iter=5,
+    allow_delegation=False,
+    memory=True,
+)
+
+
+# %%
+@tool("Search Tool")
+def search_news(query: str) -> str:
+    """Search for news articles using DuckDuckGo."""
+    search_tool = DuckDuckGoSearchResults(backend="news", num_results=10)
+    return search_tool.run(query)
+
+
+# %%
+getNews = Task(
+    description=f"""
+    Use the search tool to search news about the stock ticket.
+    The current date is {datetime.now()}
+    Compose the results into a helpful report.
+    """,
+    expected_output="""
+    A summary of the overall market and one paragraph summary for the requested asset.
+    Include the fear/greed score based on the news. Use the format:
+    <STOCK TICKET>
+    <SUMMARY BASED ON NEWS>
+    <FEAR/GREED SCORE>
+    """,
+    agent=newsAnalyst,
+    tools=[search_news],
 )
 
 # %%

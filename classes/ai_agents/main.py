@@ -3,17 +3,20 @@ import os
 from datetime import datetime, timedelta
 
 import yfinance as yf
-from crewai import Agent, Crew, Process, Task
+from crewai import LLM, Agent, Crew, Process, Task
 from crewai.tools import tool
 from crewai_tools import CSVSearchTool
+from IPython.display import Markdown
 from langchain_community.tools import DuckDuckGoSearchResults
-from langchain_ollama import ChatOllama
 
 os.environ["OPENAI_API_KEY"] = "NA"
 
 
 # %%
-llm = ChatOllama(model="llama3.2:3b", base_url="http://localhost:11434")
+llm = LLM(
+    model="ollama/llama3.2:3b",
+)
+
 
 # %%
 csvWalletTool = CSVSearchTool(
@@ -54,7 +57,7 @@ customerManager = Agent(
 getCustomerWallet = Task(
     description="""
     Use the customer question and find the {ticket} in the CSV file.
-    Provide if the stock is in the customer wallet and if it is, provide the mean prive he paid and the total numbers of stocks owned.
+    Provide if the stock is in the customer wallet and if it is, provide the mean price he paid and the total numbers of stocks owned.
     """,
     expected_output="If the customer owns the stock, provide the mean price paid and the total stock numbers.",
     agent=customerManager,
@@ -76,7 +79,7 @@ def fetch_stock_price(ticket: str):
 
 
 # %%
-stocketPriceAnalyst = Agent(
+stockPriceAnalyst = Agent(
     role="Senior Stock Price Analyst",
     goal="Find the {ticket} stock price and analyses price trends. Compare with the price that the customer paid.",
     backstory="""
@@ -97,7 +100,7 @@ getStockPrice = Task(
   eg. 'stock=AAPL, price UP'
   """,
     tools=[fetch_stock_price],
-    agent=stocketPriceAnalyst,
+    agent=stockPriceAnalyst,
 )
 
 # %%
@@ -147,5 +150,97 @@ getNews = Task(
     agent=newsAnalyst,
     tools=[search_news],
 )
+
+# %%
+stockRecommender = Agent(
+    role="Chief Stock Analyst",
+    goal="Get the data from the customer currently stocks, the provided input of stock price trends and the stock news to provide a recommendation: Buy, Sell or Hold the stock.",
+    backstory="""
+    You're the leader of the stock analyst team.
+    You have a great performance in the past 20 years in stock recommendation.
+    With all of your team information, you are able to provide the best recommendation for the customer to achieve the maximum value creation.
+    """,
+    verbose=True,
+    llm=llm,
+    max_iter=5,
+    allow_delegation=True,
+    memory=True,
+)
+
+# %%
+recommendStock = Task(
+    description="""
+    Use the stock price trend, the stock news report and the customers stock mean price of the {ticket} to provide a recommendation: Buy, Sell or Hold.
+    If the previous reports are not well provided you can delegate back to the specific analyst to work again in the their task.
+    """,
+    expected_output="""
+    A brief paragraph with the summary of the reasons for recommendation and the recommendation itself in one of the three possible outputs: Buy, Sell or Hold.
+    Use the format:
+    <SUMMARY OF REASONS>
+    <RECOMMENDATION>
+    """,
+    agent=stockRecommender,
+    context=[getNews, getStockPrice, getCustomerWallet],
+)
+
+# %%
+copywriter = Agent(
+    role="Stock Content Writer",
+    goal="""
+    Write an insightful and compelling and informative 4 paragraph long newsletter.
+    Based on the stock price report, the news report and the recommendation report.
+    """,
+    backstory="""
+    You are an unbelievable copywriter that understand complex financial concepts and explain for a dummy audience.
+    You create compelling stories and narrative that resonate with the audience.
+    """,
+    verbose=True,
+    llm=llm,
+    max_iter=5,
+    allow_delegation=False,
+    memory=True,
+)
+
+# %%
+writeNewsletter = Task(
+    description="""
+    Use the stock price trend, the stock news report and stock recommendationto write an insightful and compelling and informative 4 paragraph long newsletter.
+    Focus on the stock price trend, news, fear/greed score and the summary reason for the recommendation.
+    Include the recommendation in the newsletter.
+    """,
+    expected_output="""
+    An eloquent 4 paragraph newsletter formatted as Markdown in an easy readable manner.
+    It should contain:
+    - Introduction - set the overrall picture
+    - Main part - provides the meat of the analysis including stock price trend, the news, the fear/greed score and the summary reason for the recommendation
+    - 3 bullets of the main summary reason of the recommendation
+    - Recommendation Summary
+    - Recommendation itself
+    """,
+    agent=copywriter,
+    context=[getStockPrice, getNews, recommendStock],
+)
+
+# %%
+crew = Crew(
+    agents=[
+        customerManager,
+        stockPriceAnalyst,
+        newsAnalyst,
+        stockRecommender,
+        copywriter,
+    ],
+    tasks=[getCustomerWallet, getStockPrice, getNews, recommendStock, writeNewsletter],
+    verbose=True,
+    process=Process.hierarchical,
+    share_crew=False,
+    manager_llm=llm,
+)
+
+# %%
+results = crew.kickoff(inputs={"ticket": "AMZN"})
+
+# %%
+Markdown(results.raw)
 
 # %%

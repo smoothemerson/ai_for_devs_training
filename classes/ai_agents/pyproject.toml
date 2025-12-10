@@ -10,9 +10,9 @@ dependencies = [
     "duckduckgo-search>=8.1.1",
     "greenlet<3.3.0",
     "ipykernel>=7.1.0",
-    "langchain>=1.1.2",
+    "ipywidgets>=8.1.8",
     "langchain-community>=0.4.1",
-    "langchain-ollama>=1.0.0",
     "litellm>=1.80.7",
+    "ollama>=0.6.1",
     "yfinance>=0.2.66",
 ]
